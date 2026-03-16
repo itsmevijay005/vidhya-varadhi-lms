@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Builder | Admin Panel</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body{
+            background:linear-gradient(135deg,#0a1f44,#1f4aa8);
+            min-height:100vh;
+        }
+
+        .navbar{
+            background:transparent;
+        }
+
+        .main-card{
+            border-radius:20px;
+            border:none;
+        }
+
+        .card-header{
+            background:linear-gradient(90deg,#1f4aa8,#3b6edc);
+            color:white;
+            text-align:center;
+            padding:20px;
+        }
+
+        .question-box{
+            background:#f8f9fa;
+            border-radius:15px;
+            padding:20px;
+            margin-bottom:20px;
+            position:relative;
+            box-shadow:0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .question-title{
+            font-weight:600;
+            margin-bottom:15px;
+        }
+
+        .delete-btn{
+            position:absolute;
+            top:10px;
+            right:10px;
+        }
+
+        .form-control{
+            border-radius:10px;
+        }
+
+        .btn-custom{
+            border-radius:10px;
+            padding:10px 20px;
+            transition:0.3s;
+        }
+
+        .btn-custom:hover{
+            transform:scale(1.05);
+        }
+
+        .footer{
+            text-align:center;
+            color:white;
+            margin-top:40px;
+            padding:15px;
+            font-size:14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark px-4 d-flex justify-content-between">
+    <span class="navbar-brand fw-bold text-white">
+        <i class="bi bi-ui-checks-grid"></i>
+        VIDHYA VARADHI Admin
+    </span>
+
+    <button class="btn btn-light btn-custom"
+        onclick="goBack()">
+        ← Back Dashboard
+    </button>
+</nav>
+
+<div class="container mt-4 mb-5">
+
+    <div class="card shadow-lg main-card">
+
+        <div class="card-header">
+            <h4><i class="bi bi-journal-plus"></i> Quiz Builder</h4>
+            <small>Create and manage quiz questions professionally</small>
+        </div>
+
+        <div class="card-body p-4">
+
+            <!-- Course Dropdown -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Select Course</label>
+                    <select id="course_id" class="form-control"></select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Select Quiz</label>
+                    <select id="quiz_number" class="form-control">
+                        <option value="1">Quiz 1</option>
+                        <option value="2">Quiz 2</option>
+                        <option value="3">Quiz 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Questions Container -->
+            <div id="questionsContainer"></div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-secondary btn-custom"
+                    onclick="addQuestion()">
+                    <i class="bi bi-plus-circle"></i> Add Question
+                </button>
+
+                <button class="btn btn-success btn-custom"
+                    onclick="saveQuiz()">
+                    <i class="bi bi-save"></i> Save All Questions
+                </button>
+            </div>
+
+            <div id="message" class="mt-3"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer">
+    © 2026 Vidhya Varadhi LMS | Quiz Builder Panel
+</div>
+
+<script>
+
+let questionCount = 0;
+
+// Load courses
+window.onload = function(){
+
+  fetch("/courses")
+    .then(res=>res.json())
+    .then(data=>{
+        let options = "";
+        data.forEach(course=>{
+            options += `<option value="${course.id}">
+                ${course.title}
+            </option>`;
+        });
+        document.getElementById("course_id").innerHTML = options;
+        loadExistingQuestions();
+    });
+};
+
+document.getElementById("course_id")
+.addEventListener("change", loadExistingQuestions);
+
+document.getElementById("quiz_number")
+.addEventListener("change", loadExistingQuestions);
+
+
+// Load Existing Questions
+function loadExistingQuestions(){
+
+    const courseId = document.getElementById("course_id").value;
+    const quizNumber = document.getElementById("quiz_number").value;
+
+    fetch(`/admin-quiz/${courseId}/${quizNumber}`)
+    .then(res=>res.json())
+    .then(data=>{
+
+        document.getElementById("questionsContainer").innerHTML = "";
+        questionCount = 0;
+
+        data.forEach(q=>{
+            addQuestion(q);
+        });
+    });
+}
+
+
+// Add Question Block
+function addQuestion(existingData = null){
+
+    questionCount++;
+
+    let questionHTML = `
+    <div class="question-box">
+        <button class="btn btn-sm btn-danger delete-btn"
+            onclick="this.parentElement.remove()">
+            <i class="bi bi-trash"></i>
+        </button>
+
+        <div class="question-title">
+            Question ${questionCount}
+        </div>
+
+        <input type="text" class="form-control mb-2 question"
+        placeholder="Enter Question"
+        value="${existingData ? existingData.question : ""}">
+
+        <input type="text" class="form-control mb-2 option1"
+        placeholder="Option 1"
+        value="${existingData ? existingData.option1 : ""}">
+
+        <input type="text" class="form-control mb-2 option2"
+        placeholder="Option 2"
+        value="${existingData ? existingData.option2 : ""}">
+
+        <input type="text" class="form-control mb-2 option3"
+        placeholder="Option 3"
+        value="${existingData ? existingData.option3 : ""}">
+
+        <input type="text" class="form-control mb-2 option4"
+        placeholder="Option 4"
+        value="${existingData ? existingData.option4 : ""}">
+
+        <select class="form-control answer">
+            <option value="">Select Correct Answer</option>
+            <option value="Option 1" ${existingData && existingData.answer === "Option 1" ? "selected" : ""}>Option 1</option>
+            <option value="Option 2" ${existingData && existingData.answer === "Option 2" ? "selected" : ""}>Option 2</option>
+            <option value="Option 3" ${existingData && existingData.answer === "Option 3" ? "selected" : ""}>Option 3</option>
+            <option value="Option 4" ${existingData && existingData.answer === "Option 4" ? "selected" : ""}>Option 4</option>
+        </select>
+    </div>
+    `;
+
+    document.getElementById("questionsContainer")
+    .insertAdjacentHTML("beforeend", questionHTML);
+}
+
+
+// Save Quiz
+function saveQuiz(){
+
+    const courseId = document.getElementById("course_id").value;
+    const quizNumber = document.getElementById("quiz_number").value;
+
+    const questionBlocks = document.querySelectorAll(".question-box");
+
+    let quizArray = [];
+
+    questionBlocks.forEach(block=>{
+
+        const question = block.querySelector(".question").value;
+        const option1 = block.querySelector(".option1").value;
+        const option2 = block.querySelector(".option2").value;
+        const option3 = block.querySelector(".option3").value;
+        const option4 = block.querySelector(".option4").value;
+        const answerLabel = block.querySelector(".answer").value;
+
+        let correctAnswer = "";
+        if(answerLabel === "Option 1") correctAnswer = option1;
+        if(answerLabel === "Option 2") correctAnswer = option2;
+        if(answerLabel === "Option 3") correctAnswer = option3;
+        if(answerLabel === "Option 4") correctAnswer = option4;
+
+        if(question.trim() !== ""){
+            quizArray.push({
+                question, option1, option2, option3, option4,
+                answer: correctAnswer
+            });
+        }
+    });
+
+    fetch(`/admin-quiz/${courseId}/${quizNumber}`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+            course_id:courseId,
+            quiz_number:quizNumber,
+            questions:quizArray
+        })
+    })
+    .then(res=>res.text())
+    .then(msg=>{
+        document.getElementById("message").innerHTML =
+        `<div class="alert alert-success">${msg}</div>`;
+        loadExistingQuestions();
+    });
+}
+
+function goBack(){
+    window.location.href="admin-dashboard.html";
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Course | Admin Panel</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body{
+            background:linear-gradient(135deg,#0a1f44,#1f4aa8);
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+        }
+
+        .navbar{
+            background:transparent;
+        }
+
+        .page-container{
+            flex:1;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .form-card{
+            width:100%;
+            max-width:500px;
+            border-radius:18px;
+            overflow:hidden;
+            border:none;
+        }
+
+        .card-header{
+            background:linear-gradient(90deg,#1f4aa8,#3b6edc);
+            color:white;
+            padding:20px;
+            text-align:center;
+        }
+
+        .form-control{
+            border-radius:10px;
+            padding:12px;
+        }
+
+        .add-btn{
+            background:linear-gradient(90deg,#1f4aa8,#3b6edc);
+            border:none;
+            border-radius:10px;
+            padding:12px;
+            font-weight:500;
+            transition:0.3s;
+        }
+
+        .add-btn:hover{
+            transform:scale(1.03);
+            box-shadow:0 6px 15px rgba(31,74,168,0.4);
+        }
+
+        .back-btn{
+            border-radius:20px;
+        }
+
+        .footer{
+            text-align:center;
+            color:white;
+            padding:15px;
+            font-size:14px;
+        }
+
+        .success-message{
+            font-weight:500;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark px-4 d-flex justify-content-between">
+    <span class="navbar-brand fw-bold text-white">
+        <i class="bi bi-mortarboard-fill"></i>
+        VIDHYA VARADHI Admin
+    </span>
+
+    <button class="btn btn-light back-btn"
+        onclick="goBack()">
+          Back to Dashboard
+    </button>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="page-container">
+
+    <div class="card shadow-lg form-card">
+
+        <div class="card-header">
+            <h4><i class="bi bi-journal-plus"></i> Add New Course</h4>
+            <small>Create a new course for students</small>
+        </div>
+
+        <div class="card-body p-4">
+
+            <div class="mb-3">
+                <label class="form-label">Course Title</label>
+                <input type="text"
+                    id="title"
+                    class="form-control"
+                    placeholder="Enter course title">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Instructor Name</label>
+                <input type="text"
+                    id="instructor"
+                    class="form-control"
+                    placeholder="Enter instructor name">
+            </div>
+
+            <button onclick="addCourse()"
+                class="btn add-btn w-100 text-white">
+                <i class="bi bi-plus-circle"></i>
+                Add Course
+            </button>
+
+            <div id="message"
+                class="text-center mt-3 success-message">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer">
+    © 2026 Vidhya Varadhi LMS | Admin Panel
+</div>
+
+<script>
+
+function goBack(){
+    window.location.href = "admin-dashboard.html";
+}
+
+function addCourse(){
+
+    const title = document.getElementById("title").value.trim();
+    const instructor = document.getElementById("instructor").value.trim();
+    const message = document.getElementById("message");
+
+    if(!title || !instructor){
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                Please fill all fields
+            </div>
+        `;
+        return;
+    }
+
+    fetch("/courses",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ title, instructor })
+    })
+    .then(res=>res.text())
+    .then(data=>{
+        message.innerHTML = `
+            <div class="alert alert-success">
+                ${data}
+            </div>
+        `;
+
+        document.getElementById("title").value="";
+        document.getElementById("instructor").value="";
+    })
+    .catch(()=>{
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                Something went wrong
+            </div>
+        `;
+    });
+
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

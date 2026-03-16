@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register | VIDHYA VARADHI LMS</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+height:100vh;
+}
+
+/* LEFT PANEL */
+
+.left-panel{
+background:linear-gradient(135deg,#1f4aa8,#0a1f44);
+color:white;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+padding:40px;
+}
+
+.left-panel h1{
+font-weight:700;
+}
+
+.left-panel p{
+opacity:0.9;
+margin-top:15px;
+}
+
+/* RIGHT PANEL */
+
+.right-panel{
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#f4f6f9;
+}
+
+/* REGISTER CARD */
+
+.register-card{
+width:100%;
+max-width:420px;
+border:none;
+border-radius:15px;
+}
+
+.card-header{
+background:linear-gradient(90deg,#1f4aa8,#3b6edc);
+color:white;
+text-align:center;
+padding:25px;
+}
+
+/* INPUT ICONS */
+
+.input-group-text{
+background:white;
+border-right:none;
+}
+
+.form-control{
+border-left:none;
+border-radius:0 8px 8px 0;
+}
+
+/* BUTTON */
+
+.register-btn{
+background:#1f4aa8;
+border:none;
+border-radius:8px;
+font-weight:500;
+}
+
+.register-btn:hover{
+background:#0a1f44;
+}
+
+/* PASSWORD TOGGLE */
+
+.toggle-password{
+cursor:pointer;
+}
+
+/* ANIMATION */
+
+.fade-in{
+animation:fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(10px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+<div class="row">
+
+<!-- LEFT PANEL -->
+
+<div class="col-md-6 left-panel d-none d-md-flex">
+
+<div>
+
+<h1>Join VIDHYA VARADHI LMS</h1>
+
+<p>
+Create your account to access professional courses,
+watch expert lectures, complete quizzes,
+and earn certifications that enhance your career.
+</p>
+
+<i class="bi bi-mortarboard-fill fs-1 mt-3"></i>
+
+</div>
+
+</div>
+
+
+<!-- RIGHT PANEL -->
+
+<div class="col-md-6 right-panel">
+
+<div class="card shadow-lg register-card fade-in">
+
+<div class="card-header">
+
+<h4 class="mb-1">Create Your Account</h4>
+
+<small>Student Registration</small>
+
+</div>
+
+<div class="card-body p-4">
+
+<!-- NAME -->
+
+<div class="input-group mb-3">
+
+<span class="input-group-text">
+<i class="bi bi-person"></i>
+</span>
+
+<input type="text" id="name"
+class="form-control"
+placeholder="Full Name">
+
+</div>
+
+
+<!-- EMAIL -->
+
+<div class="input-group mb-3">
+
+<span class="input-group-text">
+<i class="bi bi-envelope"></i>
+</span>
+
+<input type="email" id="email"
+class="form-control"
+placeholder="Email Address">
+
+</div>
+
+
+<!-- PASSWORD -->
+
+<div class="input-group mb-3">
+
+<span class="input-group-text">
+<i class="bi bi-lock"></i>
+</span>
+
+<input type="password" id="password"
+class="form-control"
+placeholder="Create Password">
+
+<span class="input-group-text toggle-password"
+onclick="togglePassword()">
+
+<i class="bi bi-eye" id="eyeIcon"></i>
+
+</span>
+
+</div>
+
+
+<!-- BUTTON -->
+
+<button onclick="register()"
+class="btn register-btn text-white w-100">
+
+Create Account
+
+</button>
+
+
+<p id="message"
+class="text-center mt-3"></p>
+
+
+<div class="text-center mt-3">
+
+Already have an account?
+<a href="login.html">Login here</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function togglePassword(){
+
+const passwordField =
+document.getElementById("password");
+
+const eyeIcon =
+document.getElementById("eyeIcon");
+
+if(passwordField.type === "password"){
+
+passwordField.type = "text";
+eyeIcon.classList.replace("bi-eye","bi-eye-slash");
+
+}
+else{
+
+passwordField.type = "password";
+eyeIcon.classList.replace("bi-eye-slash","bi-eye");
+
+}
+
+}
+
+
+function register(){
+
+const name =
+document.getElementById("name").value.trim();
+
+const email =
+document.getElementById("email").value.trim();
+
+const password =
+document.getElementById("password").value.trim();
+
+
+if(!name || !email || !password){
+
+document.getElementById("message").innerText =
+"Please fill all fields";
+
+document.getElementById("message").classList.add("text-danger");
+
+return;
+
+}
+
+
+fetch("/register",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+name:name,
+email:email,
+password:password
+})
+
+})
+
+.then(res=>res.text())
+
+.then(data=>{
+
+document.getElementById("message").innerText=data;
+
+if(data.toLowerCase().includes("success")){
+
+document.getElementById("message").classList.remove("text-danger");
+document.getElementById("message").classList.add("text-success");
+
+setTimeout(()=>{
+window.location.href="login.html";
+},1500);
+
+}
+else{
+
+document.getElementById("message").classList.add("text-danger");
+
+}
+
+});
+
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

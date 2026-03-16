@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course Content</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body{ background:#f5f7fa; font-family:'Segoe UI'; }
+        .navbar{ background:#0a1f44; }
+        .sidebar{
+            background:white;
+            min-height:100vh;
+            border-right:1px solid #e5e5e5;
+            padding:20px;
+        }
+        .content-item{
+            padding:10px 15px;
+            border-radius:8px;
+            cursor:pointer;
+            margin-bottom:8px;
+            font-weight:500;
+        }
+        .content-item:hover{ background:#e9f2ff; }
+        .active-item{ background:#3b5bcc; color:white; }
+        .locked{ color:#999; cursor:not-allowed; }
+        .question-card{ border-radius:12px; }
+        .option-label{
+            display:block;
+            padding:10px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            margin-bottom:8px;
+            cursor:pointer;
+        }
+        .option-label:hover{ background:#e9f2ff; }
+        .score-box{
+            background:#eef3ff;
+            padding:15px;
+            border-radius:10px;
+            margin-bottom:20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark px-4">
+    <span class="navbar-brand fw-bold">VIDHYA VARADHI LMS</span>
+</nav>
+
+<div class="container-fluid">
+<div class="row">
+
+<div class="col-md-3 sidebar">
+    <h5>Course Content</h5>
+    <div id="quiz1" class="content-item active-item" onclick="selectQuiz(1)">Quiz 1</div>
+    <div id="quiz2" class="content-item locked">Quiz 2</div>
+    <div id="quiz3" class="content-item locked">Quiz 3</div>
+    <hr>
+    <div id="assignmentBtn" class="content-item locked">Final Assignment</div>
+</div>
+
+<div class="col-md-9 p-4">
+    <div id="displayArea">
+        <h4>Select Quiz 1 to start</h4>
+    </div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+let quizData = [];
+let assignmentData = [];
+let currentQuiz = 1;
+let quizProgress = 1;
+let quizScores = {};
+
+
+// ================= QUIZ =================
+
+function selectQuiz(num){
+    if(num > quizProgress) return;
+    loadQuiz(num);
+}
+
+function loadQuiz(num){
+
+    const courseId = localStorage.getItem("quiz_course_id");
+    const email = localStorage.getItem("email");
+    currentQuiz = num;
+
+    fetch(`http://localhost:3000/get-quiz/${courseId}/${num}/${email}`)
+    .then(res=>res.json())
+    .then(response=>{
+
+        // 🔹 Check if quiz is locked
+        if(response.locked){
+            document.getElementById("displayArea").innerHTML =
+            `<div class="alert alert-warning">
+                Previous quiz not completed.
+            </div>`;
+            return;
+        }
+
+        // 🔹 Ensure data exists
+        quizData = response.data || [];
+
+        if(quizData.length === 0){
+            document.getElementById("displayArea").innerHTML =
+            `<div class="alert alert-info">
+                No questions available for this quiz.
+            </div>`;
+            return;
+        }
+
+        let output = `<h4 class="mb-4">Quiz ${num}</h4>`;
+
+        quizData.forEach((q,index)=>{
+
+            output += `
+            <div class="card shadow question-card mb-4 p-4">
+
+                <h6 class="fw-bold">
+                    Q${index+1}. ${q.question}
+                </h6>
+            `;
+
+            [q.option1,q.option2,q.option3,q.option4]
+            .forEach(option=>{
+                output += `
+                <label class="option-label">
+                    <input type="radio"
+                        name="q${index}"
+                        value="${option}">
+                    ${option}
+                </label>
+                `;
+            });
+
+            output += `</div>`;
+        });
+
+        output += `
+        <button class="btn btn-success"
+            onclick="submitQuiz()">
+            Submit Quiz
+        </button>
+        `;
+
+        document.getElementById("displayArea").innerHTML = output;
+
+    })
+    .catch(err=>{
+        console.error(err);
+        document.getElementById("displayArea").innerHTML =
+        `<div class="alert alert-danger">
+            Error loading quiz
+        </div>`;
+    });
+}
+
+
+
+async function submitQuiz(){
+
+    let score = 0;
+
+    quizData.forEach((q,index)=>{
+        const selected =
+            document.querySelector(`input[name="q${index}"]:checked`);
+
+        if(selected && selected.value === q.answer){
+            score++;
+        }
+    });
+
+    const percentage =
+        Math.round((score / quizData.length) * 100);
+
+    quizScores[currentQuiz] = percentage;
+
+    const email = localStorage.getItem("email");
+    const courseId = localStorage.getItem("quiz_course_id");
+
+    await fetch("http://localhost:3000/save-attempt",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+            email:email,
+            course_id:courseId,
+            quiz_number:currentQuiz,
+            score:percentage
+        })
+    });
+
+    if(currentQuiz === 1){
+        quizProgress = 2;
+        document.getElementById("quiz2").classList.remove("locked");
+        document.getElementById("quiz2").onclick = ()=>selectQuiz(2);
+    }
+
+    else if(currentQuiz === 2){
+        quizProgress = 3;
+        document.getElementById("quiz3").classList.remove("locked");
+        document.getElementById("quiz3").onclick = ()=>selectQuiz(3);
+    }
+
+    else if(currentQuiz === 3){
+
+        const overall =
+            Math.round(
+                (quizScores[1] +
+                 quizScores[2] +
+                 quizScores[3]) / 3
+            );
+
+        localStorage.setItem("quizOverall", overall);
+
+        unlockAssignment();
+
+        document.getElementById("displayArea").innerHTML = `
+            <div class="alert alert-success p-4">
+                <h4>All Quizzes Completed</h4>
+                <p>Quiz Average: ${overall}%</p>
+                <p>You can now attempt Final Assignment.</p>
+            </div>
+        `;
+        return;
+    }
+
+    loadQuiz(currentQuiz + 1);
+}
+
+
+
+// ================= ASSIGNMENT =================
+
+function unlockAssignment(){
+    const btn = document.getElementById("assignmentBtn");
+    btn.classList.remove("locked");
+    btn.onclick = loadAssignment;
+}
+
+function loadAssignment(){
+
+    const courseId = localStorage.getItem("quiz_course_id");
+
+    fetch(`http://localhost:3000/get-assignment-questions/${courseId}`)
+    .then(res=>res.json())
+    .then(data=>{
+
+        assignmentData = data;
+
+        if(data.length === 0){
+            document.getElementById("displayArea").innerHTML =
+            "<h4>No Assignment Available</h4>";
+            return;
+        }
+
+        let output = `<h4 class="mb-4">Final Assignment</h4>`;
+
+        data.forEach((q,index)=>{
+            output += `
+            <div class="card shadow question-card mb-4 p-4">
+
+                <h6>Q${index+1}. ${q.question}</h6>
+            `;
+
+            [q.option1,q.option2,q.option3,q.option4]
+            .forEach(option=>{
+                output += `
+                <label class="option-label">
+                    <input type="radio"
+                        name="a${index}"
+                        value="${option}">
+                    ${option}
+                </label>
+                `;
+            });
+
+            output += `</div>`;
+        });
+
+        output += `
+        <button class="btn btn-primary"
+            onclick="submitAssignment()">
+            Submit Assignment
+        </button>
+        `;
+
+        document.getElementById("displayArea").innerHTML = output;
+    });
+}
+
+
+
+function submitAssignment(){
+
+    let score = 0;
+
+    assignmentData.forEach((q,index)=>{
+        const selected =
+            document.querySelector(`input[name="a${index}"]:checked`);
+
+        if(selected && selected.value === q.answer){
+            score++;
+        }
+    });
+
+    const assignmentPercentage =
+        Math.round((score / assignmentData.length) * 100);
+
+    const quizOverall =
+        parseInt(localStorage.getItem("quizOverall")) || 0;
+
+    const finalPercentage =
+        Math.round((quizOverall + assignmentPercentage) / 2);
+
+    const passMark = 40;
+
+    if(finalPercentage >= passMark){
+
+        document.getElementById("displayArea").innerHTML = `
+            <div class="alert alert-success p-4 text-center">
+
+                <h4>Course Completed Successfully</h4>
+
+                <p>Quiz Average: ${quizOverall}%</p>
+                <p>Assignment: ${assignmentPercentage}%</p>
+
+                <h5>Final Score: ${finalPercentage}%</h5>
+
+                <button class="btn btn-dark mt-3"
+                    onclick="generateCertificate(${finalPercentage})">
+
+                    Download Certificate
+                </button>
+
+            </div>
+        `;
+
+    } else {
+
+        document.getElementById("displayArea").innerHTML = `
+            <div class="alert alert-danger p-4 text-center">
+
+                <h4>Course Not Completed</h4>
+
+                <p>Quiz Average: ${quizOverall}%</p>
+                <p>Assignment: ${assignmentPercentage}%</p>
+
+                <h5>Final Score: ${finalPercentage}%</h5>
+
+                <p>Minimum 40% required to qualify.</p>
+
+            </div>
+        `;
+    }
+}
+
+
+// ================= CERTIFICATE =================
+
+function generateCertificate(finalPercentage){
+
+    const studentName = localStorage.getItem("name");
+
+    localStorage.setItem("studentName", studentName);
+    localStorage.setItem("finalPercentage", finalPercentage);
+
+    window.location.assign("certificate.html");
+}
+
+</script>
+
+
+</body>
+</html>
