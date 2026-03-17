@@ -35,17 +35,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Test route
-app.get('/', (req, res) => {
-    res.send("Backend is working successfully");
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
-
 // Get courses API
 app.get('/courses', (req, res) => {
 
@@ -97,7 +86,10 @@ app.post('/login', (req, res) => {
 
         if(err){
             console.log(err);
-            res.send("Login failed");
+            res.json({
+                error: "Login failed",
+                role: null
+            });
         }
         else if(result.length > 0){
 
@@ -111,7 +103,10 @@ app.post('/login', (req, res) => {
 
         }
         else{
-            res.send("Invalid email or password");
+            res.json({
+                error: "Invalid email or password",
+                role: null
+            });
         }
 
     });
@@ -765,3 +760,15 @@ function myCertificates(){
         document.getElementById("courses").innerHTML = output;
     });
 }
+// Test route
+app.get('/', (req, res) => {
+    res.send("Backend is working successfully");
+});
+
+// START SERVER - ALL ROUTES MUST BE DEFINED BEFORE THIS
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log('Server running on port ' + PORT);
+  console.log('MySQL Connected Successfully');
+});

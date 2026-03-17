@@ -288,7 +288,7 @@ const password = document.getElementById("password").value;
 
 if(selectedRole === "admin"){
 
-fetch("http://localhost:3000/login",{
+fetch("/login",{
 
 method:"POST",
 
@@ -304,6 +304,8 @@ password:password
 })
 .then(res=>res.json())
 .then(data=>{
+
+console.log("Admin login response:", data);
 
 if(!data.role){
 
@@ -330,7 +332,9 @@ localStorage.setItem("name",data.name);
 window.location.href="admin-dashboard.html";
 
 })
-.catch(()=>{
+.catch((error)=>{
+
+console.error("Admin login error:", error);
 
 document.getElementById("message").innerText =
 "Login failed";
@@ -344,7 +348,7 @@ return;
 
 /* STUDENT LOGIN */
 
-fetch("http://localhost:3000/login",{
+fetch("/login",{
 
 method:"POST",
 
@@ -360,6 +364,8 @@ password:password
 })
 .then(res=>res.json())
 .then(data=>{
+
+console.log("Student login response:", data);
 
 if(!data.role){
 
@@ -386,7 +392,9 @@ localStorage.setItem("name",data.name);
 window.location.href="student-dashboard.html";
 
 })
-.catch(()=>{
+.catch((error)=>{
+
+console.error("Student login error:", error);
 
 document.getElementById("message").innerText =
 "Login failed";

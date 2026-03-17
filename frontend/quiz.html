@@ -91,7 +91,7 @@ function loadQuiz(num){
     const email = localStorage.getItem("email");
     currentQuiz = num;
 
-    fetch(`http://localhost:3000/get-quiz/${courseId}/${num}/${email}`)
+   fetch(`/get-quiz/${courseId}/${num}/${email}`)
     .then(res=>res.json())
     .then(response=>{
 
@@ -184,7 +184,7 @@ async function submitQuiz(){
     const email = localStorage.getItem("email");
     const courseId = localStorage.getItem("quiz_course_id");
 
-    await fetch("http://localhost:3000/save-attempt",{
+   await fetch("/save-attempt",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({
@@ -247,7 +247,7 @@ function loadAssignment(){
 
     const courseId = localStorage.getItem("quiz_course_id");
 
-    fetch(`http://localhost:3000/get-assignment-questions/${courseId}`)
+    fetch(`/get-assignment-questions/${courseId}`)
     .then(res=>res.json())
     .then(data=>{
 

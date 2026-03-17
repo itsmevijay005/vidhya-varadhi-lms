@@ -178,7 +178,7 @@ window.onload = function(){
 
 function loadStats(){
 
-    fetch("http://localhost:3000/courses")
+   fetch("/courses")
     .then(res=>res.json())
     .then(data=>{
         document.getElementById("totalCourses").innerText = data.length;
@@ -192,7 +192,7 @@ function loadStats(){
 
 function viewCourses(){
 
-    fetch("http://localhost:3000/courses")
+    fetch("/courses")
     .then(response => response.json())
     .then(data => {
 
